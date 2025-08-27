@@ -1,0 +1,20 @@
+{
+  "name": "trip-geninus-monorepo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "web:dev": "npm run dev -w trip-geninus-web",
+    "mobile:dev": "npm run dev -w trip-geninus-mobile",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "workspaces": [
+    "packages/server",
+    "packages/web",
+    "packages/mobile"
+  ]
+}

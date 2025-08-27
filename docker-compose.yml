@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    container_name: trip-genius-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # 将从 .env 文件中读取密码
+      POSTGRES_DB: trip_genius_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - trip-genius-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  trip-genius-pgdata:

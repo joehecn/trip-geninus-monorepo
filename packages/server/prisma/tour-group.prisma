@@ -1,0 +1,89 @@
+// =================================================================
+// 旅行团模型
+// =================================================================
+
+model TourGroup {
+  id              Int             @id @default(autoincrement())
+  name            String          @db.VarChar(255) // 旅行团名称
+  description     String?         @db.Text // 旅行团描述
+  startDate       DateTime        @db.Date // 开始日期
+  endDate         DateTime        @db.Date // 结束日期
+  maxParticipants Int // 最大参与人数
+  status          TourGroupStatus @default(ACTIVE) // 旅行团状态
+  createdAt       DateTime        @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt       DateTime        @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  organizer User @relation(fields: [userId], references: [id], onDelete: Restrict) // 组织者
+  userId    Int
+
+  // 修复一对一关系定义，只在一方定义 fields 和 references
+  itinerary Itinerary? // 行程
+  reviews   TourReview[] // 评价
+
+  participants      TourGroupParticipant[] // 参与者
+  photos            TourGroupPhoto[] // 照片
+  guideLogs         TourGroupGuideLog[] // 导游日志
+  guideAssignments  TourGroupGuideAssignment[] // 导游分配
+  participantGroups TourGroupParticipantGroup[] // 参与者分组
+
+  @@index([userId])
+  @@index([status, startDate]) // 复合索引提升查询效率
+  @@index([startDate, endDate])
+  @@map("tour_groups")
+}
+
+model TourGroupParticipant {
+  id Int @id @default(autoincrement())
+
+  phone String? @db.VarChar(30) // 增加长度以支持国际号码
+
+  fullName     String     @db.VarChar(100) // 全名
+  idCardType   IdCardType // 证件类型
+  idCardNumber String     @db.VarChar(255) // 证件号码
+  gender       Gender // 性别
+  dateOfBirth  DateTime   @db.Date // 出生日期
+
+  emergencyContact String   @db.VarChar(255) // 紧急联系人
+  emergencyPhone   String   @db.VarChar(30) // 增加长度以支持国际号码
+  specialRequests  String?  @db.Text // 特殊要求
+  registrationDate DateTime @default(now()) @db.Timestamptz() // 注册日期
+
+  tourGroup   TourGroup @relation(fields: [tourGroupId], references: [id], onDelete: Cascade) // 所属旅行团
+  tourGroupId Int
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Restrict) // 关联用户
+  userId Int
+
+  // 使用显式关联表
+  groupMemberships TourGroupParticipantGroupMember[] // 分组成员关系
+  reviews          TourReview[] // 评价
+
+  // 关联到分配的房间
+  assignedRoom   AssignedRoom? @relation(fields: [assignedRoomId], references: [id], onDelete: SetNull)
+  assignedRoomId Int?
+
+  @@index([tourGroupId])
+  @@index([userId])
+  @@index([assignedRoomId])
+  @@map("tour_group_participants")
+}
+
+model TourGroupPhoto {
+  id         Int      @id @default(autoincrement())
+  url        String   @db.VarChar(2048) // 照片URL
+  caption    String?  @db.Text // 描述
+  isPublic   Boolean  @default(true) // 是否公开
+  uploadDate DateTime @default(now()) @db.Timestamptz() // 上传日期
+  likes      Int      @default(0) // 点赞数
+
+  tourGroup   TourGroup @relation(fields: [tourGroupId], references: [id], onDelete: Cascade) // 所属旅行团
+  tourGroupId Int
+
+  // 统一的上传者逻辑
+  uploaderType UploaderType // 上传者类型 (用户或参与者)
+  uploaderId   Int // 上传者ID (关联到 User 或 TourGroupParticipant)
+
+  @@index([tourGroupId])
+  @@index([uploaderId])
+  @@map("tour_group_photos")
+}

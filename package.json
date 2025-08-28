@@ -6,7 +6,10 @@
   "scripts": {
     "web:dev": "npm run dev -w trip-geninus-web",
     "mobile:dev": "npm run dev -w trip-geninus-mobile",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:format": "npm run prisma:format -w trip-geninus-server",
+    "prisma:generate": "npm run prisma:generate -w trip-geninus-server",
+    "prisma:validate": "npm run prisma:validate -w trip-geninus-server"
   },
   "keywords": [],
   "author": "",

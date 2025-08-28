@@ -1,0 +1,126 @@
+// =================================================================
+// 枚举定义
+// =================================================================
+
+// 分类类型枚举
+enum CategoryType {
+  CAT_ATTRACTION
+  CAT_HOTEL
+  CAT_RESTAURANT
+  CAT_SHOPPING_PLACE
+  CAT_TRANSPORTATION
+}
+
+// 收藏实体类型枚举
+enum FavoriteEntityType {
+  FAV_ATTRACTION
+  FAV_HOTEL
+  FAV_RESTAURANT
+  FAV_SHOPPING_PLACE
+  FAV_TRANSPORTATION
+}
+
+// 媒体类型枚举
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+// 旅行团状态枚举
+enum TourGroupStatus {
+  DRAFT
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  INACTIVE
+}
+
+// 上传者类型枚举
+enum UploaderType {
+  USER
+  PARTICIPANT
+}
+
+// 定义旅行中被评价的对象类型
+enum TourReviewTargetType {
+  // 具体的数据库实体
+  TOUR_GROUP // 整体旅行体验
+  GUIDE // 旅行中的特定导游
+  HOTEL // 旅行中入住的酒店
+  ATTRACTION // 旅行中参观的景点
+  RESTAURANT // 旅行中用餐的餐厅
+  TRANSPORTATION // 特定的交通路段
+  SHOPPING_PLACE // 旅行中访问的购物场所
+
+  // 抽象概念/系统功能
+  ITINERARY_PLANNING // 行程规划体验
+  CUSTOMER_SUPPORT // 客户支持服务
+  APP_USABILITY // 移动端或网页端应用的可用性
+  OTHER_FEEDBACK // 一般性或其他反馈
+}
+
+// 导游角色枚举
+enum GuideRole {
+  LEAD_GUIDE
+  LOCAL_GUIDE
+  INTERPRETER
+  DRIVER
+}
+
+// 导游日志类型枚举
+enum GuideLogType {
+  DAILY_LOG
+  ACTIVITY_LOG
+  INCIDENT_LOG
+  WEATHER_LOG
+  FINANCIAL_LOG
+}
+
+// 行程条目类型枚举
+enum ItineraryItemType {
+  TRANSPORTATION // 交通（飞机、火车、汽车、轮船等）
+  DINING // 餐饮（饭店、当地特色菜品、菜谱等）
+  ATTRACTION // 景点
+  ACCOMMODATION // 酒店住宿
+  SHOPPING // 购物
+  OTHER // 其它活动
+}
+
+// 用户角色枚举
+enum UserRole {
+  ADMIN // 系统管理员
+  PLANNER // 计划调度员
+  GUIDE // 导游
+  USER // 普通用户
+}
+
+// 用户状态枚举
+enum UserStatus {
+  ACTIVE // 活跃
+  DISABLED // 禁用
+  DELETED // 已删除 (软删除)
+}
+
+// 证件类型枚举
+enum IdCardType {
+  ID_CARD // 身份证
+  PASSPORT // 护照
+  HOME_RETURN_PERMIT // 港澳回乡证
+  TAIWAN_COMPATRIOT_PERMIT // 台胞证
+  OFFICER_ID // 军官证
+  OTHER // 其它
+}
+
+// 性别枚举
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// 审计状态枚举
+enum AuditStatus {
+  SUCCESS // 成功
+  FAILED // 失败
+}

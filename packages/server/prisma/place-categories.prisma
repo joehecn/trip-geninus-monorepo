@@ -1,0 +1,69 @@
+// =================================================================
+// 分类与分类法
+// =================================================================
+
+model Category {
+  id          Int          @id @default(autoincrement())
+  name        String       @db.VarChar(100) // 分类名称
+  type        CategoryType // 分类类型
+  description String?      @db.Text // 分类描述
+
+  attractions     AttractionCategory[]
+  hotels          HotelCategory[]
+  restaurants     RestaurantCategory[]
+  shoppingPlaces  ShoppingPlaceCategory[]
+  transportations TransportationCategory[]
+
+  @@unique([name, type])
+  @@map("categories")
+}
+
+model AttractionCategory {
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  attractionId Int
+  category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId   Int
+
+  @@id([attractionId, categoryId])
+  @@map("attraction_categories")
+}
+
+model HotelCategory {
+  hotel      Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId    Int
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int
+
+  @@id([hotelId, categoryId])
+  @@map("hotel_categories")
+}
+
+model RestaurantCategory {
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId Int
+  category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId   Int
+
+  @@id([restaurantId, categoryId])
+  @@map("restaurant_categories")
+}
+
+model ShoppingPlaceCategory {
+  shoppingPlace   ShoppingPlace @relation(fields: [shoppingPlaceId], references: [id], onDelete: Cascade)
+  shoppingPlaceId Int
+  category        Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId      Int
+
+  @@id([shoppingPlaceId, categoryId])
+  @@map("shopping_place_categories")
+}
+
+model TransportationCategory {
+  transportation   Transportation @relation(fields: [transportationId], references: [id], onDelete: Cascade)
+  transportationId Int
+  category         Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId       Int
+
+  @@id([transportationId, categoryId])
+  @@map("transportation_categories")
+}

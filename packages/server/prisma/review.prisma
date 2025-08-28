@@ -1,0 +1,36 @@
+// =================================================================
+// 统一的旅行评价系统
+// =================================================================
+
+// 旅行参与者创建的统一评价模型
+model TourReview {
+  id        Int      @id @default(autoincrement())
+  comment   String?  @db.Text // 评论内容
+  createdAt DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  // 评价的作者（始终是参与者）
+  participant   TourGroupParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participantId Int
+
+  // 此评价所属的旅行团
+  tourGroup   TourGroup @relation(fields: [tourGroupId], references: [id], onDelete: Cascade)
+  tourGroupId Int
+
+  // 被评价的对象类型
+  targetType TourReviewTargetType
+
+  // 对于具体数据库实体的评价，此处保存实体ID（如酒店ID、导游ID）
+  // 对于抽象反馈（如CUSTOMER_SUPPORT），此处可以为空
+  targetId Int?
+
+  // 灵活的多维度评分，以JSON格式存储
+  // 例如，对于酒店: { "overall": 5, "cleanliness": 4, "service": 5 }
+  // 例如，对于导游: { "knowledge": 5, "friendliness": 5 }
+  ratings Json
+
+  @@index([participantId])
+  @@index([tourGroupId])
+  @@index([targetType, targetId]) // 用于统计查询的索引
+  @@map("tour_reviews")
+}

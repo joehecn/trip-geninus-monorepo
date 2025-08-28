@@ -1,0 +1,110 @@
+// =================================================================
+// 其他地点与收藏、媒体资源
+// =================================================================
+
+model UserFavorite {
+  id         Int                @id @default(autoincrement())
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int // 用户ID
+  entityType FavoriteEntityType // 实体类型
+
+  // 可选的景点关联
+  attraction   Attraction? @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  attractionId Int?
+
+  // 可选的酒店关联
+  hotel   Hotel? @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId Int?
+
+  // 可选的餐厅关联
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId Int?
+
+  // 可选的购物场所关联
+  shoppingPlace   ShoppingPlace? @relation(fields: [shoppingPlaceId], references: [id], onDelete: Cascade)
+  shoppingPlaceId Int?
+
+  // 可选的交通方式关联
+  transportation   Transportation? @relation(fields: [transportationId], references: [id], onDelete: Cascade)
+  transportationId Int?
+
+  createdAt DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  @@unique([userId, attractionId], map: "user_attraction_favorite_unique")
+  @@unique([userId, hotelId], map: "user_hotel_favorite_unique")
+  @@unique([userId, restaurantId], map: "user_restaurant_favorite_unique")
+  @@unique([userId, shoppingPlaceId], map: "user_shopping_place_favorite_unique")
+  @@unique([userId, transportationId], map: "user_transportation_favorite_unique")
+  @@index([userId, entityType])
+  @@index([attractionId])
+  @@index([hotelId])
+  @@index([restaurantId])
+  @@index([shoppingPlaceId])
+  @@index([transportationId])
+  @@map("user_favorites")
+}
+
+// 统一的媒体资源模型
+model Asset {
+  id         Int       @id @default(autoincrement())
+  mediaType  MediaType // 媒体类型
+  url        String    @db.VarChar(2048) // 资源URL
+  caption    String?   @db.Text // 描述
+  isPrimary  Boolean   @default(false) // 是否为主图
+  uploadedAt DateTime  @default(now()) @db.Timestamptz() // 上传时间
+
+  // 上传者关联
+  uploader   User @relation("AssetUploader", fields: [uploaderId], references: [id], onDelete: Cascade)
+  uploaderId Int
+
+  // 显式关联替换多态关联
+  attraction      Attraction?    @relation("AttractionToAsset", fields: [attractionId], references: [id], onDelete: Cascade)
+  attractionId    Int?
+  hotel           Hotel?         @relation("HotelToAsset", fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId         Int?
+  restaurant      Restaurant?    @relation("RestaurantToAsset", fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId    Int?
+  shoppingPlace   ShoppingPlace? @relation("ShoppingPlaceToAsset", fields: [shoppingPlaceId], references: [id], onDelete: Cascade)
+  shoppingPlaceId Int?
+
+  @@index([uploaderId])
+  @@index([attractionId])
+  @@index([hotelId])
+  @@index([restaurantId])
+  @@index([shoppingPlaceId])
+  @@map("assets")
+}
+
+model HotelRoom {
+  id           Int     @id @default(autoincrement())
+  roomType     String  @db.VarChar(100) // 房间类型
+  description  String? @db.Text // 房间描述
+  isAvailable  Boolean @default(true) // 是否可用
+  maxOccupancy Int     @default(2) // 最大入住人数
+
+  hotel   Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId Int
+
+  @@index([hotelId])
+  @@map("hotel_rooms")
+}
+
+model Amenity {
+  id          Int            @id @default(autoincrement())
+  name        String         @unique @db.VarChar(100) // 设施名称
+  description String?        @db.Text // 设施描述
+  hotels      HotelAmenity[] // 关联的酒店设施
+
+  @@map("amenities")
+}
+
+model HotelAmenity {
+  hotel     Hotel   @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId   Int
+  amenity   Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  amenityId Int
+
+  @@id([hotelId, amenityId])
+  @@map("hotel_amenities")
+}

@@ -1,0 +1,163 @@
+// =================================================================
+// 核心模型: 景点与位置
+// =================================================================
+
+model Location {
+  id        Int      @id @default(autoincrement())
+  city      String   @db.VarChar(100) // 城市
+  region    String?  @db.VarChar(100) // 重命名为region以获得更广泛的兼容性
+  country   String   @db.VarChar(100) // 国家
+  createdAt DateTime @default(now()) @db.Timestamptz() // 创建时间
+
+  // 反向关系字段
+  attractions        Attraction[]                  @relation("LocationToAttraction")
+  hotels             Hotel[]                       @relation("LocationToHotel")
+  restaurants        Restaurant[]                  @relation("LocationToRestaurant")
+  shoppingPlaces     ShoppingPlace[]               @relation("LocationToShoppingPlace")
+  itineraryDays      ItineraryDay[]
+  // 天气快照反向关系
+  weatherSnapshots   ItineraryDayWeatherSnapshot[]
+  tourGroupGuideLogs TourGroupGuideLog[]
+
+  @@unique([city, region, country])
+  @@map("locations")
+}
+
+model Attraction {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique @db.VarChar(255) // 景点名称
+  description   String?  @db.Text // 景点描述
+  address       String   @db.VarChar(511) // 地址
+  phone         String?  @db.VarChar(30) // 联系电话
+  latitude      Decimal? @db.Decimal(9, 6) // 纬度
+  longitude     Decimal? @db.Decimal(9, 6) // 经度
+  averageRating Decimal  @default(0.00) @db.Decimal(3, 2) // 平均评分
+  reviewCount   Int      @default(0) // 评论数量
+  createdAt     DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  location   Location @relation("LocationToAttraction", fields: [locationId], references: [id], onDelete: Restrict)
+  locationId Int
+
+  categories           AttractionCategory[]
+  favoritedBy          UserFavorite[]
+  destinations         ItineraryDestination[]
+  templateDestinations TemplateDestination[]
+  assets               Asset[]                @relation("AttractionToAsset")
+
+  @@index([locationId])
+  @@index([averageRating])
+  @@index([locationId, averageRating]) // 复合索引提升按地点和评分查询的性能
+  @@map("attractions")
+}
+
+// 餐厅模型
+model Restaurant {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique @db.VarChar(255) // 餐厅名称
+  description   String?  @db.Text // 餐厅描述
+  address       String   @db.VarChar(511) // 地址
+  latitude      Decimal? @db.Decimal(9, 6) // 纬度
+  longitude     Decimal? @db.Decimal(9, 6) // 经度
+  averageRating Decimal  @default(0.00) @db.Decimal(3, 2) // 平均评分
+  reviewCount   Int      @default(0) // 评论数量
+  priceRange    String?  @db.VarChar(50) // 价格范围
+  phone         String?  @db.VarChar(30) // 电话
+  website       String?  @db.VarChar(255) // 网站
+  createdAt     DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  location   Location @relation("LocationToRestaurant", fields: [locationId], references: [id], onDelete: Restrict) // 位置
+  locationId Int
+
+  favoritedBy          UserFavorite[]
+  destinations         ItineraryDestination[]
+  templateDestinations TemplateDestination[]
+  assets               Asset[]                @relation("RestaurantToAsset")
+  categories           RestaurantCategory[]
+
+  @@index([locationId])
+  @@index([averageRating])
+  @@index([locationId, averageRating]) // 复合索引提升按地点和评分查询的性能
+  @@map("restaurants")
+}
+
+// 酒店模型
+model Hotel {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique @db.VarChar(255) // 酒店名称
+  description   String?  @db.Text // 酒店描述
+  address       String   @db.VarChar(511) // 地址
+  phone         String?  @db.VarChar(30) // 联系电话
+  latitude      Decimal? @db.Decimal(9, 6) // 纬度
+  longitude     Decimal? @db.Decimal(9, 6) // 经度
+  starRating    Int      @default(0) // 0 = 未评级, 1-5 = 星级
+  averageRating Decimal  @default(0.00) @db.Decimal(3, 2) // 平均评分
+  reviewCount   Int      @default(0) // 评论数量
+  createdAt     DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  location   Location @relation("LocationToHotel", fields: [locationId], references: [id], onDelete: Restrict)
+  locationId Int
+
+  favoritedBy          UserFavorite[]
+  rooms                HotelRoom[]
+  amenities            HotelAmenity[]
+  categories           HotelCategory[]
+  destinations         ItineraryDestination[]
+  templateDestinations TemplateDestination[]
+  ItineraryHotelStay   ItineraryHotelStay[]
+  assets               Asset[]                @relation("HotelToAsset")
+
+  @@index([locationId])
+  @@index([locationId, starRating]) // 复合索引提升按地点和评分查询的性能
+  @@map("hotels")
+}
+
+// 交通方式模型
+model Transportation {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255) // 交通方式名称（如：高铁、飞机、大巴等）
+  description String?  @db.Text // 描述
+  provider    String?  @db.VarChar(255) // 服务提供商
+  createdAt   DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  destinations         ItineraryDestination[]
+  templateDestinations TemplateDestination[]
+  categories           TransportationCategory[]
+  favoritedBy          UserFavorite[]
+
+  @@map("transportations")
+}
+
+// 购物场所模型
+model ShoppingPlace {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique @db.VarChar(255) // 购物场所名称
+  description   String?  @db.Text // 描述
+  address       String   @db.VarChar(511) // 地址
+  latitude      Decimal? @db.Decimal(9, 6) // 纬度
+  longitude     Decimal? @db.Decimal(9, 6) // 经度
+  averageRating Decimal  @default(0.00) @db.Decimal(3, 2) // 平均评分
+  reviewCount   Int      @default(0) // 评论数量
+  openingHours  String?  @db.VarChar(255) // 营业时间
+  phone         String?  @db.VarChar(30) // 电话
+  website       String?  @db.VarChar(255) // 网站
+  createdAt     DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  location   Location @relation("LocationToShoppingPlace", fields: [locationId], references: [id], onDelete: Restrict) // 位置
+  locationId Int
+
+  favoritedBy          UserFavorite[]
+  destinations         ItineraryDestination[]
+  templateDestinations TemplateDestination[]
+  assets               Asset[]                 @relation("ShoppingPlaceToAsset")
+  categories           ShoppingPlaceCategory[]
+
+  @@index([locationId])
+  @@index([averageRating])
+  @@index([locationId, averageRating]) // 复合索引提升按地点和评分查询的性能
+  @@map("shopping_places")
+}

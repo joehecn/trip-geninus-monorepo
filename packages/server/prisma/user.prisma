@@ -1,0 +1,83 @@
+// =================================================================
+// 用户相关模型
+// =================================================================
+
+model User {
+  id Int @id @default(autoincrement())
+
+  phone String @unique @db.VarChar(30) // 手机号
+
+  fullName     String      @db.VarChar(100) // 全名
+  idCardType   IdCardType? // 证件类型
+  idCardNumber String?     @db.VarChar(255) // 证件号码
+  gender       Gender? // 性别
+  dateOfBirth  DateTime?   @db.Date // 出生日期
+
+  passwordHash String?    @db.VarChar(255) // 密码哈希值
+  role         UserRole   @default(USER) // 用户角色
+  status       UserStatus @default(ACTIVE) // 用户状态
+
+  openid String? @unique @db.VarChar(255) // 微信唯一标识
+
+  createdAt            DateTime               @default(now()) @db.Timestamptz() // 创建时间
+  favorites            UserFavorite[] // 用户收藏
+  uploadedAssets       Asset[]                @relation("AssetUploader") // 上传的媒体资源
+  TourGroup            TourGroup[] // 组织的旅行团
+  TourGroupParticipant TourGroupParticipant[] // 参与的旅行团
+  ItineraryTemplate    ItineraryTemplate[] // 创建的行程模板
+  // 导游信息反向关系
+  guideInfo            TourGroupGuide?        @relation("TourGroupGuideToUser") // 导游信息
+  // 审计日志反向关系
+  auditLogs            AuditLog[] // 审计日志
+
+  @@map("users")
+}
+
+// =================================================================
+// 旅行团导游模型
+// =================================================================
+
+// 导游信息
+model TourGroupGuide {
+  id                Int      @id @default(autoincrement())
+  /// 导游资质编号
+  licenseNumber     String   @unique @db.VarChar(100) // 改为必填，导游资质需强制登记
+  yearsOfExperience Int? // 经验年限
+  specialty         String?  @db.Text // 专业领域
+  introduction      String?  @db.Text // 介绍
+  userId            Int      @unique
+  createdAt         DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt         DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  user             User                       @relation("TourGroupGuideToUser", fields: [userId], references: [id], onDelete: Cascade)
+  guideAssignments TourGroupGuideAssignment[]
+
+  @@map("tour_group_guides")
+}
+
+// =================================================================
+// 审计日志模型
+// =================================================================
+
+// 审计日志模型，记录系统操作日志
+model AuditLog {
+  id          Int         @id @default(autoincrement())
+  action      String      @db.VarChar(100) // 操作类型
+  entityType  String      @db.VarChar(100) // 实体类型
+  entityId    Int // 实体ID
+  oldData     Json? // 旧数据
+  newData     Json? // 新数据
+  performedAt DateTime    @default(now()) @db.Timestamptz() // 操作时间
+  ipAddress   String?     @db.VarChar(45) // IP地址
+  userAgent   String?     @db.Text // 用户代理
+  status      AuditStatus @default(SUCCESS) // 操作状态
+  reason      String?     @db.Text // 操作原因
+
+  performedBy   User @relation(fields: [performedById], references: [id], onDelete: Restrict) // 操作者
+  performedById Int
+
+  @@index([entityType, entityId]) // 实体类型和ID索引提升查询性能
+  @@index([performedAt]) // 操作时间索引提升时间范围查询性能
+  @@index([performedById])
+  @@map("audit_logs")
+}

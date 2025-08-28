@@ -1,0 +1,155 @@
+// =================================================================
+// 行程模型
+// =================================================================
+
+model ItineraryTemplate {
+  id           Int      @id @default(autoincrement())
+  title        String   @db.VarChar(255) // 模板标题
+  description  String?  @db.Text // 模板描述
+  durationDays Int // 持续天数
+  isPublic     Boolean  @default(false) // 是否公开
+  version      String   @default("1.0") @db.VarChar(20) // 版本号
+  createdAt    DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  creator   User @relation(fields: [creatorId], references: [id], onDelete: Restrict) // 创建者
+  creatorId Int
+
+  destinations TemplateDestination[] // 模板目的地
+  itineraries  Itinerary[] // 基于此模板创建的行程
+
+  @@unique([title, version]) // 联合唯一索引确保模板标题和版本的唯一性
+  @@index([creatorId])
+  @@map("itinerary_templates")
+}
+
+model Itinerary {
+  id              Int       @id @default(autoincrement())
+  title           String    @db.VarChar(255) // 行程标题
+  description     String?   @db.Text // 行程描述
+  durationDays    Int // 持续天数
+  startDate       DateTime? @db.Date // 开始日期
+  endDate         DateTime? @db.Date // 结束日期
+  templateVersion String?   @db.VarChar(20) // 生成时的模板版本号
+  createdAt       DateTime  @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt       DateTime  @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  template   ItineraryTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade) // 来源模板
+  templateId Int?
+
+  tourGroup   TourGroup @relation(fields: [tourGroupId], references: [id], onDelete: Cascade) // 关联的旅行团
+  tourGroupId Int       @unique
+
+  days ItineraryDay[] // 行程天数
+
+  @@index([startDate, endDate]) // 复合索引提升日期范围查询性能
+  @@index([templateId])
+  @@map("itineraries")
+}
+
+// 行程天数模型，表示行程中的每一天
+model ItineraryDay {
+  id        Int       @id @default(autoincrement())
+  dayNumber Int // 天数编号
+  date      DateTime? @db.Date // 日期
+  notes     String?   @db.Text // 备注
+
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade) // 所属行程
+  itineraryId Int
+
+  // 当天的主要地点，例如城市
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  locationId Int?
+
+  // 当天的活动安排
+  activities ItineraryDestination[]
+
+  // 当天的天气情况
+  weatherSnapshot ItineraryDayWeatherSnapshot?
+
+  @@unique([itineraryId, dayNumber]) // 确保同一行程中天数编号的唯一性
+  @@index([locationId]) // 地点索引提升查询性能
+  @@map("itinerary_days")
+}
+
+// 行程目的地模型，表示一天中的单个活动或事件
+model ItineraryDestination {
+  id           Int       @id @default(autoincrement())
+  orderInDay   Int       @default(1) // 当天活动的排序
+  description  String?   @db.Text // 描述
+  startTime    DateTime? @db.Time // 开始时间
+  endTime      DateTime? @db.Time // 结束时间
+  notes        String?   @db.Text // 备注
+  isCustomized Boolean   @default(false) // 标记是否为用户自定义修改
+
+  // 所属的行程天数
+  itineraryDay   ItineraryDay @relation(fields: [itineraryDayId], references: [id], onDelete: Cascade)
+  itineraryDayId Int
+
+  // 行程条目类型
+  itemType ItineraryItemType
+
+  // 关联到具体的实体
+  attraction   Attraction? @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  attractionId Int?
+
+  hotel   Hotel? @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId Int?
+
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId Int?
+
+  transportation   Transportation? @relation(fields: [transportationId], references: [id], onDelete: Cascade)
+  transportationId Int?
+
+  shoppingPlace   ShoppingPlace? @relation(fields: [shoppingPlaceId], references: [id], onDelete: Cascade)
+  shoppingPlaceId Int?
+
+  ItineraryHotelStay ItineraryHotelStay?
+
+  @@index([itineraryDayId])
+  @@index([attractionId])
+  @@index([hotelId])
+  @@index([restaurantId])
+  @@index([transportationId])
+  @@index([shoppingPlaceId])
+  @@map("itinerary_destinations")
+}
+
+// 行程模板目的地模型，不与特定行程日期绑定
+model TemplateDestination {
+  id          Int     @id @default(autoincrement())
+  dayNumber   Int // 天数编号
+  orderInDay  Int     @default(1) // 当天活动的排序
+  description String? @db.Text // 描述
+  notes       String? @db.Text // 备注
+
+  // 行程条目类型
+  itemType ItineraryItemType
+
+  template   ItineraryTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade) // 所属模板
+  templateId Int
+
+  attraction   Attraction? @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  attractionId Int?
+
+  hotel   Hotel? @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId Int?
+
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId Int?
+
+  transportation   Transportation? @relation(fields: [transportationId], references: [id], onDelete: Cascade)
+  transportationId Int?
+
+  shoppingPlace   ShoppingPlace? @relation(fields: [shoppingPlaceId], references: [id], onDelete: Cascade)
+  shoppingPlaceId Int?
+
+  @@index([templateId])
+  @@index([attractionId])
+  @@index([hotelId])
+  @@index([restaurantId])
+  @@index([transportationId])
+  @@index([shoppingPlaceId])
+  @@map("template_destinations")
+}

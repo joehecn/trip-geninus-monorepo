@@ -1,0 +1,51 @@
+// =================================================================
+// 导游相关模型
+// =================================================================
+
+// 旅行团与导游的关联
+model TourGroupGuideAssignment {
+  id Int @id @default(autoincrement())
+
+  phone    String @db.VarChar(30) // 从 User 表中复制
+  fullName String @db.VarChar(100) // 从 User 表中复制
+
+  assignedAt DateTime  @default(now()) @db.Timestamptz() // 分配时间
+  role       GuideRole @default(LEAD_GUIDE) // 导游角色
+
+  tourGroup   TourGroup @relation(fields: [tourGroupId], references: [id], onDelete: Cascade) // 旅行团
+  tourGroupId Int
+
+  guide   TourGroupGuide @relation(fields: [guideId], references: [id], onDelete: Cascade) // 导游
+  guideId Int
+
+  @@unique([tourGroupId, guideId])
+  @@map("tour_group_guide_assignments")
+}
+
+// 导游工作日志
+model TourGroupGuideLog {
+  id                Int          @id @default(autoincrement())
+  title             String       @db.VarChar(255) // 标题
+  content           String       @db.Text // 内容
+  logType           GuideLogType @default(DAILY_LOG) // 日志类型
+  date              DateTime     @db.Date // 日期
+  startTime         DateTime?    @db.Time // 开始时间
+  endTime           DateTime?    @db.Time // 结束时间
+  location          Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull) // 关联地点
+  locationId        Int?
+  weather           String?      @db.VarChar(100) // 天气
+  participantsCount Int? // 参与人数
+  issues            String?      @db.Text // 问题
+  solutions         String?      @db.Text // 解决方案
+  nextDayPlan       String?      @db.Text // 次日计划
+  isImportant       Boolean      @default(false) // 是否重要
+  createdAt         DateTime     @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt         DateTime     @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  tourGroup   TourGroup @relation(fields: [tourGroupId], references: [id], onDelete: Cascade)
+  tourGroupId Int
+
+  @@index([tourGroupId])
+  @@index([locationId])
+  @@map("tour_group_guide_logs")
+}

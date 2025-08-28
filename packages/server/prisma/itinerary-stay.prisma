@@ -1,0 +1,42 @@
+// =================================================================
+// 行程与房间分配模型
+// =================================================================
+
+// 行程酒店住宿安排
+model ItineraryHotelStay {
+  id           Int      @id @default(autoincrement())
+  checkInDate  DateTime @db.Date // 入住日期
+  checkOutDate DateTime @db.Date // 退房日期
+  notes        String?  @db.Text // 备注
+  createdAt    DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  // 关联到行程中的住宿条目
+  destination   ItineraryDestination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  destinationId Int                  @unique
+
+  hotel   Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict) // 酒店
+  hotelId Int
+
+  // 住宿期间的房间分配
+  assignedRooms AssignedRoom[]
+
+  @@index([hotelId])
+  @@map("itinerary_hotel_stays")
+}
+
+// 分配的房间（支持多人）
+model AssignedRoom {
+  id         Int     @id @default(autoincrement())
+  roomNumber String  @db.VarChar(50) // 房间号
+  notes      String? @db.Text // 备注
+
+  hotelStay   ItineraryHotelStay @relation(fields: [hotelStayId], references: [id], onDelete: Cascade)
+  hotelStayId Int
+
+  // 这个房间内的所有参与者
+  occupants TourGroupParticipant[]
+
+  @@index([hotelStayId])
+  @@map("assigned_rooms")
+}

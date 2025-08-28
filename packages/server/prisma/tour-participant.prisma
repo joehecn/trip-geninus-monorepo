@@ -1,0 +1,33 @@
+// =================================================================
+// 团队成员分组模型
+// =================================================================
+
+// 团队成员分组
+model TourGroupParticipantGroup {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100) // 分组名称
+  description String?  @db.Text // 分组描述
+  createdAt   DateTime @default(now()) @db.Timestamptz() // 创建时间
+  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz() // 更新时间
+
+  tourGroup   TourGroup @relation(fields: [tourGroupId], references: [id], onDelete: Cascade) // 所属旅行团
+  tourGroupId Int
+
+  // 显式定义关联表以支持更多元数据
+  members TourGroupParticipantGroupMember[]
+
+  @@index([tourGroupId])
+  @@map("tour_group_participant_groups")
+}
+
+// 团队成员分组关联表
+model TourGroupParticipantGroupMember {
+  group         TourGroupParticipantGroup @relation(fields: [groupId], references: [id], onDelete: Cascade) // 分组
+  groupId       Int
+  participant   TourGroupParticipant      @relation(fields: [participantId], references: [id], onDelete: Cascade) // 参与者
+  participantId Int
+  joinedAt      DateTime                  @default(now()) // 加入时间
+
+  @@id([groupId, participantId])
+  @@map("tour_group_participant_group_members")
+}

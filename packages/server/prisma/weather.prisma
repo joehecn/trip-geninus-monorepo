@@ -1,0 +1,31 @@
+// =================================================================
+// 天气快照模型
+// =================================================================
+
+// 行程天数天气快照模型，存储行程中特定日期的天气预报
+model ItineraryDayWeatherSnapshot {
+  id              Int       @id @default(autoincrement())
+  date            DateTime  @db.Date // 预报日期
+  temperatureHigh Decimal?  @db.Decimal(5, 2) // 最高温度
+  temperatureLow  Decimal?  @db.Decimal(5, 2) // 最低温度
+  condition       String    @db.VarChar(100) // 天气状况
+  humidity        Int? // 湿度百分比
+  windSpeed       Decimal?  @db.Decimal(5, 2) // 风速
+  windDirection   String?   @db.VarChar(50) // 风向
+  precipitation   Decimal?  @db.Decimal(5, 2) // 降水量
+  uvIndex         Int? // 紫外线指数
+  sunrise         DateTime? @db.Time // 日出时间
+  sunset          DateTime? @db.Time // 日落时间
+  forecastSource  String?   @db.VarChar(100) // 天气预报来源
+  capturedAt      DateTime  @default(now()) @db.Timestamptz() // 快照捕获时间
+
+  itineraryDay   ItineraryDay @relation(fields: [itineraryDayId], references: [id], onDelete: Cascade) // 关联的行程天数
+  itineraryDayId Int          @unique
+
+  // 天气预报的地理位置
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  locationId Int?
+
+  @@index([locationId])
+  @@map("itinerary_day_weather_snapshots")
+}
